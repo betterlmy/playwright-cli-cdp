@@ -31,11 +31,23 @@ CDP is supported by Chrome-family browsers on macOS, Linux, Windows, and WSL2. T
 
 ## What It Does
 
+- Checks the local environment before startup or attach.
 - Starts Chrome, Chromium, or Edge with remote debugging enabled.
 - Attaches `playwright-cli` to a local or user-provided CDP endpoint.
 - Drives attached pages with snapshots, clicks, typing, navigation, tabs, screenshots, console logs, network logs, cookies, and storage commands.
 - Sends raw Chrome DevTools Protocol commands through `playwright-cli run-code`.
 - Keeps the default CDP endpoint local at `127.0.0.1:9222`.
+
+## Environment Check
+
+The preflight scripts do not launch Chrome. They check:
+
+- `playwright-cli` or local `npx --no-install playwright-cli`.
+- Endpoint reachability through `/json/version`.
+- Chrome-family browser discovery.
+- Basic port conflicts.
+- Risky `CDP_HOST=0.0.0.0` binding.
+- WSL2 notes when no local Linux browser or endpoint is available.
 
 ## Quick Start
 
@@ -44,6 +56,7 @@ CDP is supported by Chrome-family browsers on macOS, Linux, Windows, and WSL2. T
 From this skill directory:
 
 ```bash
+bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 playwright-cli -s=cdp goto https://example.com
@@ -54,6 +67,7 @@ playwright-cli -s=cdp detach
 Start Chrome at a URL:
 
 ```bash
+bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh https://example.com
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
@@ -61,6 +75,7 @@ playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 Use a custom port:
 
 ```bash
+CDP_PORT=9333 bash scripts/check-environment.sh
 CDP_PORT=9333 bash scripts/open-chrome-remote.sh
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
@@ -70,6 +85,7 @@ playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 From this skill directory:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 playwright-cli -s=cdp goto https://example.com
@@ -80,6 +96,7 @@ playwright-cli -s=cdp detach
 Start Chrome at a URL:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
@@ -88,6 +105,7 @@ Use a custom port:
 
 ```powershell
 $env:CDP_PORT = "9333"
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
@@ -96,6 +114,7 @@ Use a custom browser path:
 
 ```powershell
 $env:CHROME_BIN = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 ```
 
@@ -125,6 +144,7 @@ powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 
 ```bash
 WINDOWS_HOST=$(awk '/nameserver/ { print $2; exit }' /etc/resolv.conf)
+CDP_ENDPOINT="http://${WINDOWS_HOST}:9222" bash scripts/check-environment.sh
 curl -fsS "http://${WINDOWS_HOST}:9222/json/version"
 playwright-cli -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
 ```
@@ -136,6 +156,7 @@ Binding CDP to `0.0.0.0` can expose browser data to other machines on the networ
 If a CDP endpoint already exists, attach to it directly:
 
 ```bash
+bash scripts/check-environment.sh
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
@@ -158,6 +179,8 @@ playwright-cli -s=cdp run-code "async page => {
 ## Files
 
 - `SKILL.md`: Agent-facing skill instructions and trigger metadata.
+- `scripts/check-environment.sh`: Checks Bash-side prerequisites on macOS, Linux, or WSL2.
+- `scripts/check-environment.ps1`: Checks PowerShell-side prerequisites on Windows.
 - `scripts/open-chrome-remote.sh`: Starts Chrome-family browsers in remote debugging mode on macOS, Linux, or WSL2 Linux environments.
 - `scripts/open-chrome-remote.ps1`: Starts Chrome-family browsers in remote debugging mode on Windows.
 - `references/cdp-startup.md`: Startup, endpoint checks, port conflicts, WSL2 notes, and profile guidance.

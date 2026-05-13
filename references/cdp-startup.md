@@ -12,11 +12,30 @@ This skill is CDP-only. Start or reuse a Chrome DevTools Protocol endpoint, then
 | WSL2 with Linux Chrome/Chromium | Yes | `bash scripts/open-chrome-remote.sh` inside WSL2 |
 | WSL2 connecting to Windows Chrome | Yes, with networking caveats | Start Windows Chrome with PowerShell, then attach from WSL2 to a reachable endpoint |
 
+## Environment check
+
+Run preflight before startup or attach unless the task is already in a known-good active CDP session.
+
+macOS, Linux, or WSL2:
+
+```bash
+bash scripts/check-environment.sh
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
+```
+
+The preflight scripts do not launch Chrome. They check `playwright-cli`, endpoint reachability, Chrome-family browser discovery, basic port conflicts, risky `CDP_HOST=0.0.0.0` binding, and WSL2 guidance.
+
 ## macOS, Linux, or WSL2 Linux browser
 
 Use the bundled Bash script to launch Chrome remote debugging with an isolated profile:
 
 ```bash
+bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
@@ -31,6 +50,7 @@ The Bash script defaults to:
 Override defaults with environment variables:
 
 ```bash
+CDP_PORT=9333 bash scripts/check-environment.sh
 CDP_PORT=9333 bash scripts/open-chrome-remote.sh https://example.com
 CDP_USER_DATA_DIR=/tmp/chrome-cdp-profile bash scripts/open-chrome-remote.sh
 CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" bash scripts/open-chrome-remote.sh
@@ -63,6 +83,7 @@ google-chrome \
 Use the bundled PowerShell script:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
@@ -80,6 +101,7 @@ Override defaults with environment variables:
 $env:CDP_PORT = "9333"
 $env:CDP_USER_DATA_DIR = "$env:TEMP\chrome-cdp-profile"
 $env:CHROME_BIN = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
 ```
 
@@ -104,6 +126,7 @@ There are two valid WSL2 setups:
 Recommended checks from WSL2:
 
 ```bash
+bash scripts/check-environment.sh
 curl -fsS http://127.0.0.1:9222/json/version
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
@@ -117,6 +140,7 @@ powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 
 ```bash
 WINDOWS_HOST=$(awk '/nameserver/ { print $2; exit }' /etc/resolv.conf)
+CDP_ENDPOINT="http://${WINDOWS_HOST}:9222" bash scripts/check-environment.sh
 curl -fsS "http://${WINDOWS_HOST}:9222/json/version"
 playwright-cli -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
 ```
@@ -139,6 +163,7 @@ macOS/Linux/WSL2:
 
 ```bash
 lsof -iTCP:9222 -sTCP:LISTEN
+CDP_PORT=9333 bash scripts/check-environment.sh
 CDP_PORT=9333 bash scripts/open-chrome-remote.sh
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
@@ -148,6 +173,7 @@ Windows PowerShell:
 ```powershell
 netstat -ano | findstr :9222
 $env:CDP_PORT = "9333"
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 ```

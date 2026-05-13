@@ -21,12 +21,14 @@ Resolve bundled scripts relative to this skill directory before running them.
 macOS, Linux, or WSL2 with a Linux browser:
 
 ```bash
+bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 ```
 
@@ -46,12 +48,14 @@ Start at a URL when useful:
 macOS, Linux, or WSL2 with a Linux browser:
 
 ```bash
+bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh https://example.com
 ```
 
 Windows PowerShell:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
 ```
 
@@ -69,6 +73,16 @@ playwright-cli -s=prod attach --cdp=https://debug.example.internal
 ```
 
 ## Endpoint checks
+
+Run the environment check before starting or attaching unless the task is already in a known-good active CDP session:
+
+```bash
+bash scripts/check-environment.sh
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
+```
 
 Before attaching, verify the endpoint when possible:
 
