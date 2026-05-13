@@ -2,248 +2,127 @@
 
 [English README](README.md)
 
-`playwright-cli-cdp` 是一个只面向 CDP 的 agent skill，用 `playwright-cli` 通过 Chrome DevTools Protocol 控制 Chrome 系浏览器。
+`playwright-cli-cdp` 是一个只面向 CDP 的 agent skill，用 Chrome DevTools Protocol (CDP) 和 `playwright-cli` 控制 Chrome 系浏览器。
 
-这个 skill 不使用 `playwright-cli open`、Playwright 托管浏览器、Firefox/WebKit、extension attach，也不使用 Playwright test debug attach 流程。所有浏览器会话都必须通过 CDP endpoint，并使用 `playwright-cli attach --cdp=...` 连接。
+它不限定某一个 agent runtime。Claude Code、Codex，或者任何支持 `SKILL.md` 文件入口的 filesystem-based skills 的 agent 系统都可以使用。
 
 ## 快速开始
 
-先把 skill 安装到你的 agent skills 目录里，然后开启一个新的 agent 会话，让 skill 列表重新加载。
+先安装 skill，然后开启一个新的 agent 会话，再让 agent 使用 `playwright-cli-cdp` 做 CDP 浏览器任务。
 
-Codex macOS/Linux：
-
-```bash
-mkdir -p ~/.codex/skills
-git clone https://github.com/betterlmy/playwright-cli-cdp.git ~/.codex/skills/playwright-cli-cdp
-```
-
-Codex Windows PowerShell：
-
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
-git clone https://github.com/betterlmy/playwright-cli-cdp.git "$env:USERPROFILE\.codex\skills\playwright-cli-cdp"
-```
-
-其他 agent：把这个仓库 clone 到该 agent 的 skills/plugins 目录，或者让 agent 直接读取这个仓库里的 `SKILL.md`。
-
-使用时，用自然语言要求 agent 做 CDP 浏览器任务，例如：
+示例 prompt：
 
 ```text
 Use playwright-cli-cdp to open https://example.com through CDP and inspect the page title.
 ```
 
-agent 应该会读取 `SKILL.md`，先跑环境检查，启动或复用 CDP endpoint，通过 `playwright-cli attach --cdp=...` 连接，然后完成你要求的浏览器任务。
+## Claude Code 安装
 
-更新已有安装：
+个人安装，所有项目都可用：
 
 ```bash
-git -C ~/.codex/skills/playwright-cli-cdp pull
+mkdir -p ~/.claude/skills
+git clone https://github.com/betterlmy/playwright-cli-cdp.git ~/.claude/skills/playwright-cli-cdp
+```
+
+项目安装，只在当前仓库中使用：
+
+```bash
+mkdir -p .claude/skills
+git clone https://github.com/betterlmy/playwright-cli-cdp.git .claude/skills/playwright-cli-cdp
+```
+
+在项目里启动 Claude Code：
+
+```bash
+claude
+```
+
+你可以直接用自然语言要求 CDP 浏览器自动化，也可以直接调用：
+
+```text
+/playwright-cli-cdp
+```
+
+Claude Code 会从 `~/.claude/skills/<skill-name>/SKILL.md` 和项目 `.claude/skills/<skill-name>/SKILL.md` 发现 skills。如果 Claude Code 已经在运行时才新建顶层 skills 目录，需要重启 Claude Code，让它开始监听新目录。
+
+## Codex 安装
+
+个人安装，使用默认 Codex skills 目录：
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+git clone https://github.com/betterlmy/playwright-cli-cdp.git "${CODEX_HOME:-$HOME/.codex}/skills/playwright-cli-cdp"
 ```
 
 Windows PowerShell：
 
 ```powershell
-git -C "$env:USERPROFILE\.codex\skills\playwright-cli-cdp" pull
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
+New-Item -ItemType Directory -Force (Join-Path $codexHome "skills") | Out-Null
+git clone https://github.com/betterlmy/playwright-cli-cdp.git (Join-Path $codexHome "skills\playwright-cli-cdp")
 ```
 
-## 谁可以使用
+安装后重启 Codex，让它重新加载 skills。
 
-这个 skill 不限于 Codex。任何 AI agent、assistant runtime 或自动化系统，只要满足下面条件，都可以使用：
+然后用自然语言要求 Codex 做 CDP 浏览器任务：
 
-- 能读取 `SKILL.md` 指令。
-- 能按当前目录解析 bundled files。
-- 能执行 shell 命令和 bundled startup scripts。
-- 能使用 `playwright-cli` 连接 CDP endpoint。
+```text
+Use playwright-cli-cdp to open https://example.com through CDP and summarize what is on the page.
+```
 
-Codex 只是支持的宿主之一；这个 workflow 本身是 agent-agnostic 的。
+## 依赖要求
 
-## 平台支持
+- Git，用于下载和更新 skill。
+- `playwright-cli`，需要安装在 agent 执行浏览器命令的环境里。
+- Chrome 系浏览器：Chrome、Chromium 或 Microsoft Edge。
+- agent 需要具备 shell 执行能力，因为这个 skill 带有 bundled scripts。
 
-CDP 由 Chrome 系浏览器提供，macOS、Linux、Windows、WSL2 都可以支持。唯一要求是浏览器暴露了当前环境能访问到的 remote debugging endpoint。
+## 更新
 
-| 平台 | 是否支持 | 启动方式 |
-| --- | --- | --- |
-| macOS | 支持 | `bash scripts/open-chrome-remote.sh` |
-| Linux | 支持 | `bash scripts/open-chrome-remote.sh` |
-| Windows | 支持 | `powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1` |
-| WSL2 + WSL 内的 Linux Chrome/Chromium | 支持 | 在 WSL2 内执行 `bash scripts/open-chrome-remote.sh` |
-| WSL2 连接 Windows Chrome | 支持，但要注意网络连通性 | 先用 PowerShell 脚本启动 Windows Chrome，再从 WSL2 连接可访问的 endpoint |
-
-## 能做什么
-
-- 在启动或连接前检查本地环境。
-- 启动开启 remote debugging 的 Chrome、Chromium 或 Edge。
-- 将 `playwright-cli` 连接到本地或用户提供的 CDP endpoint。
-- 对已连接页面执行 snapshot、点击、输入、导航、标签页、截图、console、network、cookie 和 storage 操作。
-- 通过 `playwright-cli run-code` 发送原始 Chrome DevTools Protocol 命令。
-- 默认只在本地 `127.0.0.1:9222` 暴露 CDP endpoint。
-
-## 环境检查
-
-preflight 脚本不会启动 Chrome。它们会检查：
-
-- `playwright-cli` 或本地 `npx --no-install playwright-cli` 是否可用。
-- `/json/version` endpoint 是否可达。
-- 是否能找到 Chrome 系浏览器。
-- 基础端口冲突。
-- `CDP_HOST=0.0.0.0` 这类高风险绑定。
-- WSL2 下没有本地 Linux 浏览器或 endpoint 时的提示。
-
-## 手动操作参考
-
-下面这些命令是 skill 内部会用到的流程。它们适合用来验证安装、排查环境问题，或手动跑一遍 CDP workflow。
-
-### macOS、Linux、或 WSL2 内的 Linux Chrome
-
-在这个 skill 目录下执行：
+Claude Code 个人安装：
 
 ```bash
-bash scripts/check-environment.sh
-bash scripts/open-chrome-remote.sh
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
-playwright-cli -s=cdp goto https://example.com
-playwright-cli -s=cdp snapshot
-playwright-cli -s=cdp detach
+git -C ~/.claude/skills/playwright-cli-cdp pull
 ```
 
-启动 Chrome 时直接打开指定 URL：
+Codex 个人安装：
 
 ```bash
-bash scripts/check-environment.sh
-bash scripts/open-chrome-remote.sh https://example.com
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+git -C "${CODEX_HOME:-$HOME/.codex}/skills/playwright-cli-cdp" pull
 ```
 
-使用自定义端口：
-
-```bash
-CDP_PORT=9333 bash scripts/check-environment.sh
-CDP_PORT=9333 bash scripts/open-chrome-remote.sh
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
-```
-
-### Windows PowerShell
-
-在这个 skill 目录下执行：
+Codex Windows PowerShell：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
-playwright-cli -s=cdp goto https://example.com
-playwright-cli -s=cdp snapshot
-playwright-cli -s=cdp detach
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
+git -C (Join-Path $codexHome "skills\playwright-cli-cdp") pull
 ```
 
-启动 Chrome 时直接打开指定 URL：
+如果 agent 没有自动重新加载 skills，更新后请重启 agent。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
-```
+## 卸载
 
-使用自定义端口：
-
-```powershell
-$env:CDP_PORT = "9333"
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
-```
-
-使用自定义浏览器路径：
-
-```powershell
-$env:CHROME_BIN = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-```
-
-### WSL2 连接 Windows Chrome
-
-推荐顺序：
-
-1. 在 Windows PowerShell 里启动 Windows Chrome：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-```
-
-2. 在 WSL2 里测试 localhost 是否可达：
+Claude Code 个人安装：
 
 ```bash
-curl -fsS http://127.0.0.1:9222/json/version
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+rm -rf ~/.claude/skills/playwright-cli-cdp
 ```
 
-3. 如果 WSL2 无法访问 `127.0.0.1:9222`，从 WSL2 获取 Windows host IP。这个方式可能需要让 Chrome 绑定非 localhost 地址，并在 Windows Firewall 放行端口：
-
-```powershell
-$env:CDP_HOST = "0.0.0.0"
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-```
+Codex 个人安装：
 
 ```bash
-WINDOWS_HOST=$(awk '/nameserver/ { print $2; exit }' /etc/resolv.conf)
-CDP_ENDPOINT="http://${WINDOWS_HOST}:9222" bash scripts/check-environment.sh
-curl -fsS "http://${WINDOWS_HOST}:9222/json/version"
-playwright-cli -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
+rm -rf "${CODEX_HOME:-$HOME/.codex}/skills/playwright-cli-cdp"
 ```
 
-把 CDP 绑定到 `0.0.0.0` 可能会把浏览器数据暴露给网络里的其他机器。只要 `127.0.0.1` 可用，就优先使用 `127.0.0.1`。
+## 说明
 
-## 已有 CDP Endpoint
+- 这是一个 CDP-only skill，设计上避免使用 Playwright 托管浏览器启动方式。
+- CDP 可以暴露 cookie、storage、页面内容、网络流量等浏览器数据。安装第三方 skill 前请先审查内容。
+- 如果想了解 agent 调用 skill 之后具体会执行什么，请阅读 `SKILL.md`。
 
-如果已经有 CDP endpoint，直接连接即可，不要再启动新的浏览器：
+## 参考资料
 
-```bash
-bash scripts/check-environment.sh
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
-```
-
-连接前可以先验证 endpoint：
-
-```bash
-curl -fsS http://127.0.0.1:9222/json/version
-curl -fsS http://127.0.0.1:9222/json/list
-```
-
-## 原始 CDP 示例
-
-```bash
-playwright-cli -s=cdp run-code "async page => {
-  const cdp = await page.context().newCDPSession(page);
-  return await cdp.send('Browser.getVersion');
-}"
-```
-
-## 文件说明
-
-- `SKILL.md`：给 agent 使用的 skill 指令和触发元数据。
-- `scripts/check-environment.sh`：在 macOS、Linux 或 WSL2 上检查 Bash 侧前置条件。
-- `scripts/check-environment.ps1`：在 Windows 上检查 PowerShell 侧前置条件。
-- `scripts/open-chrome-remote.sh`：在 macOS、Linux 或 WSL2 Linux 环境里启动 Chrome 系浏览器的 remote debugging 模式。
-- `scripts/open-chrome-remote.ps1`：在 Windows 里启动 Chrome 系浏览器的 remote debugging 模式。
-- `references/cdp-startup.md`：启动方式、endpoint 检查、端口冲突、WSL2 注意事项和 profile 说明。
-- `references/cdp-recipes.md`：原始 CDP 命令示例。
-
-## 安全说明
-
-CDP 可以访问 cookie、storage、网络流量、页面内容和浏览器内部信息。这个 skill 默认只绑定 `127.0.0.1`。除非用户明确要求并接受风险，不要把 CDP 绑定到 `0.0.0.0` 或公网接口。
-
-## 依赖说明
-
-把 `playwright-cli` 安装在执行 attach 命令的环境里。例如 WSL2 连接 Windows Chrome 时，`playwright-cli` 需要在 WSL2 内可用。
-
-如果全局没有 `playwright-cli`，先尝试本地版本：
-
-```bash
-npx --no-install playwright-cli --version
-```
-
-如果没有本地版本：
-
-```bash
-npm install -g @playwright/cli@latest
-```
+- Claude Code Skills: https://code.claude.com/docs/en/skills
+- Claude Code Agent SDK Skills: https://code.claude.com/docs/en/agent-sdk/skills
+- OpenAI Skills Catalog for Codex: https://github.com/openai/skills
