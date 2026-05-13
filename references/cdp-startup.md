@@ -2,6 +2,8 @@
 
 This skill is CDP-only. Start or reuse a Chrome DevTools Protocol endpoint, then attach with `playwright-cli attach --cdp=...`.
 
+If a CDP endpoint is already reachable, reuse it and leave it running. Do not close, kill, restart, detach, or otherwise clean up an existing browser or debugging port unless the user explicitly asks.
+
 ## Platform support
 
 | Platform | Supported | Startup path |
@@ -178,7 +180,7 @@ powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
 
-Prefer changing ports over killing unknown processes. Kill a process only when the user explicitly asks or it is clearly the stale Chrome remote instance started for the task.
+Prefer changing ports over killing unknown processes. Kill a process only when the user explicitly asks to close or kill Chrome.
 
 ## Existing Chrome profiles
 

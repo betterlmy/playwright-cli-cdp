@@ -10,9 +10,11 @@ allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(
 
 This skill is CDP-only. All browser work must happen through a Chrome DevTools Protocol endpoint and `playwright-cli attach --cdp=...`.
 
-Do not use `playwright-cli open`, `--browser=...`, Firefox/WebKit launches, extension attach, or Playwright test debug attach workflows in this skill. If no CDP endpoint exists, start or reuse Chrome remote debugging on `127.0.0.1:9222`, attach `playwright-cli` to that endpoint, and use the session name `cdp`.
+Do not use `playwright-cli open`, `--browser=...`, Firefox/WebKit launches, extension attach, or Playwright test debug attach workflows in this skill. If a CDP endpoint is already reachable, reuse it as-is. If no CDP endpoint exists, start Chrome remote debugging on `127.0.0.1:9222`, attach `playwright-cli` to that endpoint, and use the session name `cdp`.
 
 Keep CDP local. Do not bind the debugging endpoint to `0.0.0.0` or a public interface unless the user explicitly requests it and accepts the security risk.
+
+Never close, kill, restart, detach, or otherwise clean up an existing CDP endpoint or browser just because the task is done. Leave Chrome and the debugging port running unless the user explicitly asks to close it. If the user asks to clean up, prefer `playwright-cli -s=<session> detach` first; only terminate browser processes when the user explicitly asks to close/kill Chrome.
 
 ## Quick start
 
@@ -40,7 +42,6 @@ playwright-cli -s=cdp goto https://example.com
 playwright-cli -s=cdp snapshot
 playwright-cli -s=cdp click e15
 playwright-cli -s=cdp eval "document.title"
-playwright-cli -s=cdp detach
 ```
 
 Start at a URL when useful:
@@ -207,12 +208,9 @@ CDP command and parameter names are case-sensitive. Use protocol commands for br
 
 ## Session lifecycle
 
-For CDP-attached browsers, `detach` leaves the external Chrome running. Do not use `close` as normal cleanup for this skill because CDP browsers are external to `playwright-cli`.
+For CDP-attached browsers, leave the external Chrome and CDP port running after the requested task. Do not run `detach`, `close`, `close-all`, `kill-all`, or process-kill commands as normal cleanup.
 
-```bash
-playwright-cli list
-playwright-cli -s=cdp detach
-```
+Only detach or close when the user explicitly asks. If cleanup is requested, prefer `playwright-cli -s=<session> detach` because it leaves the browser and CDP endpoint running.
 
 When multiple CDP endpoints are in use, name sessions by endpoint or purpose:
 
