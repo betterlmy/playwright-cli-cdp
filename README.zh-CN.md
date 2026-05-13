@@ -6,6 +6,46 @@
 
 这个 skill 不使用 `playwright-cli open`、Playwright 托管浏览器、Firefox/WebKit、extension attach，也不使用 Playwright test debug attach 流程。所有浏览器会话都必须通过 CDP endpoint，并使用 `playwright-cli attach --cdp=...` 连接。
 
+## 快速开始
+
+先把 skill 安装到你的 agent skills 目录里，然后开启一个新的 agent 会话，让 skill 列表重新加载。
+
+Codex macOS/Linux：
+
+```bash
+mkdir -p ~/.codex/skills
+git clone https://github.com/betterlmy/playwright-cli-cdp.git ~/.codex/skills/playwright-cli-cdp
+```
+
+Codex Windows PowerShell：
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
+git clone https://github.com/betterlmy/playwright-cli-cdp.git "$env:USERPROFILE\.codex\skills\playwright-cli-cdp"
+```
+
+其他 agent：把这个仓库 clone 到该 agent 的 skills/plugins 目录，或者让 agent 直接读取这个仓库里的 `SKILL.md`。
+
+使用时，用自然语言要求 agent 做 CDP 浏览器任务，例如：
+
+```text
+Use playwright-cli-cdp to open https://example.com through CDP and inspect the page title.
+```
+
+agent 应该会读取 `SKILL.md`，先跑环境检查，启动或复用 CDP endpoint，通过 `playwright-cli attach --cdp=...` 连接，然后完成你要求的浏览器任务。
+
+更新已有安装：
+
+```bash
+git -C ~/.codex/skills/playwright-cli-cdp pull
+```
+
+Windows PowerShell：
+
+```powershell
+git -C "$env:USERPROFILE\.codex\skills\playwright-cli-cdp" pull
+```
+
 ## 谁可以使用
 
 这个 skill 不限于 Codex。任何 AI agent、assistant runtime 或自动化系统，只要满足下面条件，都可以使用：
@@ -49,7 +89,9 @@ preflight 脚本不会启动 Chrome。它们会检查：
 - `CDP_HOST=0.0.0.0` 这类高风险绑定。
 - WSL2 下没有本地 Linux 浏览器或 endpoint 时的提示。
 
-## 快速开始
+## 手动操作参考
+
+下面这些命令是 skill 内部会用到的流程。它们适合用来验证安装、排查环境问题，或手动跑一遍 CDP workflow。
 
 ### macOS、Linux、或 WSL2 内的 Linux Chrome
 
@@ -190,7 +232,7 @@ playwright-cli -s=cdp run-code "async page => {
 
 CDP 可以访问 cookie、storage、网络流量、页面内容和浏览器内部信息。这个 skill 默认只绑定 `127.0.0.1`。除非用户明确要求并接受风险，不要把 CDP 绑定到 `0.0.0.0` 或公网接口。
 
-## 安装说明
+## 依赖说明
 
 把 `playwright-cli` 安装在执行 attach 命令的环境里。例如 WSL2 连接 Windows Chrome 时，`playwright-cli` 需要在 WSL2 内可用。
 

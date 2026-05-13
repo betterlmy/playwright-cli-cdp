@@ -6,6 +6,46 @@
 
 This skill does not use `playwright-cli open`, Playwright-managed browser launches, Firefox/WebKit, extension attach, or Playwright test debug attach workflows. Every browser session must attach through a CDP endpoint with `playwright-cli attach --cdp=...`.
 
+## Quick Start
+
+Install the skill into your agent's skills directory, then start a new agent session so the skill list is reloaded.
+
+For Codex on macOS/Linux:
+
+```bash
+mkdir -p ~/.codex/skills
+git clone https://github.com/betterlmy/playwright-cli-cdp.git ~/.codex/skills/playwright-cli-cdp
+```
+
+For Codex on Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
+git clone https://github.com/betterlmy/playwright-cli-cdp.git "$env:USERPROFILE\.codex\skills\playwright-cli-cdp"
+```
+
+For other agents, clone this repository into that agent's skills/plugins directory or point the agent at this repository's `SKILL.md`.
+
+Use it by asking your agent for CDP browser work, for example:
+
+```text
+Use playwright-cli-cdp to open https://example.com through CDP and inspect the page title.
+```
+
+The agent should load `SKILL.md`, run the environment check, start or reuse a CDP endpoint, attach with `playwright-cli attach --cdp=...`, then perform the requested browser task.
+
+Update an existing install:
+
+```bash
+git -C ~/.codex/skills/playwright-cli-cdp pull
+```
+
+On Windows PowerShell:
+
+```powershell
+git -C "$env:USERPROFILE\.codex\skills\playwright-cli-cdp" pull
+```
+
 ## Who Can Use It
 
 This skill is not limited to Codex. Any AI agent, assistant runtime, or automation system can use it if it can:
@@ -49,7 +89,9 @@ The preflight scripts do not launch Chrome. They check:
 - Risky `CDP_HOST=0.0.0.0` binding.
 - WSL2 notes when no local Linux browser or endpoint is available.
 
-## Quick Start
+## Manual Operation Reference
+
+The commands below are what the skill uses internally. They are useful for validating an install, debugging an environment, or running the workflow by hand.
 
 ### macOS, Linux, or WSL2 with Linux Chrome
 
@@ -190,7 +232,7 @@ playwright-cli -s=cdp run-code "async page => {
 
 CDP can expose cookies, storage, network traffic, page content, and browser internals. By default, this skill binds remote debugging to `127.0.0.1`. Do not bind CDP to `0.0.0.0` or a public interface unless the user explicitly requests it and accepts the risk.
 
-## Installation Notes
+## Dependency Notes
 
 Install `playwright-cli` in the environment where you run the attach command. For example, if WSL2 attaches to Windows Chrome, `playwright-cli` must be available inside WSL2.
 
