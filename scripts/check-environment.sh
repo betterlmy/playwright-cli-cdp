@@ -135,7 +135,7 @@ if [[ "$endpoint_ready" != true ]]; then
 fi
 
 if grep -qi microsoft /proc/version 2>/dev/null && [[ "$endpoint_ready" != true && -z "$chrome_path" ]]; then
-  warn "WSL2 note: start Windows Chrome with scripts/open-chrome-remote.ps1, then attach to localhost or the Windows host IP"
+  warn "WSL2 note: if Chrome is only installed on Windows, run: win_script=\"\$(wslpath -w scripts/open-chrome-remote.ps1)\"; powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"\$win_script\""
 fi
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"

@@ -123,7 +123,27 @@ Manual Windows startup:
 There are two valid WSL2 setups:
 
 - Chrome/Chromium installed inside WSL2: use the Bash script and attach to `http://127.0.0.1:9222` from WSL2.
-- Windows Chrome controlled from WSL2: start Windows Chrome with the PowerShell script, then attach from WSL2 to whichever endpoint WSL2 can reach.
+- Windows Chrome controlled from WSL2: start Windows Chrome with the PowerShell script through `powershell.exe`, then attach from WSL2 to whichever endpoint WSL2 can reach.
+
+If the skill is installed under the WSL filesystem, do not assume the script exists under `C:\Users\...`. Convert the bundled script path to a Windows-visible path and pass it as an argument:
+
+```bash
+win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script"
+```
+
+To start at a URL:
+
+```bash
+win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script" https://example.com
+```
+
+If you hand-write a UNC path such as `\\wsl.localhost\...` in Bash, do not put the literal path inside Bash double quotes because backslashes can be consumed before PowerShell receives them. Prefer `wslpath -w`; otherwise wrap the PowerShell command in Bash single quotes:
+
+```bash
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '& "\\wsl.localhost\Ubuntu\home\you\.claude\skills\playwright-cli-cdp\scripts\open-chrome-remote.ps1"'
+```
 
 Recommended checks from WSL2:
 
@@ -133,11 +153,11 @@ curl -fsS http://127.0.0.1:9222/json/version
 bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
-If WSL2 cannot reach Windows Chrome through `127.0.0.1`, use the Windows host IP. This may require starting Chrome with `CDP_HOST=0.0.0.0` in Windows PowerShell and allowing the port through Windows Firewall:
+If WSL2 cannot reach Windows Chrome through `127.0.0.1`, use the Windows host IP. This may require starting Chrome with `CDP_HOST=0.0.0.0` in the PowerShell process and allowing the port through Windows Firewall:
 
-```powershell
-$env:CDP_HOST = "0.0.0.0"
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
+```bash
+win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "\$env:CDP_HOST='0.0.0.0'; & '$win_script'"
 ```
 
 ```bash

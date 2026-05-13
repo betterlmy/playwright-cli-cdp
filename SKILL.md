@@ -41,6 +41,15 @@ powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 ```
 
+WSL2 with Windows Chrome:
+
+```bash
+win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script"
+```
+
+When the PowerShell script is stored in the WSL filesystem, do not guess a `C:\Users\...` path. Prefer `wslpath -w`; if you must pass a literal `\\wsl.localhost\...` path, wrap the PowerShell command in Bash single quotes so Bash does not consume the UNC backslashes.
+
 Attach and drive the CDP session:
 
 ```bash
@@ -73,6 +82,13 @@ Windows PowerShell:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
+```
+
+WSL2 with Windows Chrome:
+
+```bash
+win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script" https://example.com
 ```
 
 Then attach:
