@@ -6,8 +6,31 @@ PORT="${CDP_PORT:-9222}"
 USER_DATA_DIR="${CDP_USER_DATA_DIR:-$HOME/.cache/playwright-cli-cdp/chrome-profile}"
 START_URL="${1:-about:blank}"
 LOG_FILE="${CDP_LOG_FILE:-/tmp/playwright-cli-cdp-chrome.log}"
+TIMEOUT_SECONDS="${CDP_TIMEOUT_SECONDS:-15}"
 
 endpoint="http://${HOST}:${PORT}"
+
+case "$TIMEOUT_SECONDS" in
+  ''|*[!0-9]*) TIMEOUT_SECONDS=15 ;;
+esac
+if (( TIMEOUT_SECONDS < 1 )); then
+  TIMEOUT_SECONDS=15
+fi
+
+probe_endpoint() {
+  curl -fsS --max-time 1 "${endpoint}/json/version" >/dev/null 2>&1
+}
+
+wait_for_endpoint() {
+  local deadline=$((SECONDS + TIMEOUT_SECONDS))
+  while (( SECONDS < deadline )); do
+    if probe_endpoint; then
+      return 0
+    fi
+    sleep 0.2
+  done
+  probe_endpoint
+}
 
 find_chrome() {
   if [[ -n "${CHROME_BIN:-}" ]]; then
@@ -68,7 +91,7 @@ launch_chrome() {
   fi
 }
 
-if curl -fsS "${endpoint}/json/version" >/dev/null 2>&1; then
+if probe_endpoint; then
   printf 'Chrome remote debugging is already available: %s\n' "$endpoint"
   exit 0
 fi
@@ -87,17 +110,14 @@ mkdir -p "$USER_DATA_DIR"
 
 launch_chrome
 
-for _ in {1..50}; do
-  if curl -fsS "${endpoint}/json/version" >/dev/null 2>&1; then
-    printf 'Chrome remote debugging is available: %s\n' "$endpoint"
-    printf 'User data dir: %s\n' "$USER_DATA_DIR"
-    exit 0
-  fi
-  sleep 0.1
-done
+if wait_for_endpoint; then
+  printf 'Chrome remote debugging is available: %s\n' "$endpoint"
+  printf 'User data dir: %s\n' "$USER_DATA_DIR"
+  exit 0
+fi
 
 cat >&2 <<EOF
-Chrome was started but CDP did not become ready at ${endpoint}.
+Chrome was started but CDP did not become ready at ${endpoint} within ${TIMEOUT_SECONDS}s.
 Log file: ${LOG_FILE}
 EOF
 exit 1

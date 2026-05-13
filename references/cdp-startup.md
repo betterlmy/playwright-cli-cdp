@@ -39,7 +39,7 @@ Use the bundled Bash script to launch Chrome remote debugging with an isolated p
 ```bash
 bash scripts/check-environment.sh
 bash scripts/open-chrome-remote.sh
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
 The Bash script defaults to:
@@ -87,7 +87,7 @@ Use the bundled PowerShell script:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
 The PowerShell script defaults to:
@@ -130,7 +130,7 @@ Recommended checks from WSL2:
 ```bash
 bash scripts/check-environment.sh
 curl -fsS http://127.0.0.1:9222/json/version
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
 If WSL2 cannot reach Windows Chrome through `127.0.0.1`, use the Windows host IP. This may require starting Chrome with `CDP_HOST=0.0.0.0` in Windows PowerShell and allowing the port through Windows Firewall:
@@ -144,7 +144,7 @@ powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 WINDOWS_HOST=$(awk '/nameserver/ { print $2; exit }' /etc/resolv.conf)
 CDP_ENDPOINT="http://${WINDOWS_HOST}:9222" bash scripts/check-environment.sh
 curl -fsS "http://${WINDOWS_HOST}:9222/json/version"
-playwright-cli -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
+bash scripts/playwright-cdp.sh -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
 ```
 
 Use the `0.0.0.0` bind only when needed. It can expose CDP to other machines on the network.
@@ -154,7 +154,7 @@ Use the `0.0.0.0` bind only when needed. It can expose CDP to other machines on 
 ```bash
 curl -fsS http://127.0.0.1:9222/json/version
 curl -fsS http://127.0.0.1:9222/json/list
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9222
+bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
 If `/json/version` fails, Chrome is not listening on that host and port. If `/json/list` is empty, open a tab in Chrome or pass a startup URL to the script.
@@ -167,7 +167,7 @@ macOS/Linux/WSL2:
 lsof -iTCP:9222 -sTCP:LISTEN
 CDP_PORT=9333 bash scripts/check-environment.sh
 CDP_PORT=9333 bash scripts/open-chrome-remote.sh
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
+bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
 
 Windows PowerShell:
@@ -177,7 +177,7 @@ netstat -ano | findstr :9222
 $env:CDP_PORT = "9333"
 powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-playwright-cli -s=cdp attach --cdp=http://127.0.0.1:9333
+powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp attach --cdp=http://127.0.0.1:9333
 ```
 
 Prefer changing ports over killing unknown processes. Kill a process only when the user explicitly asks to close or kill Chrome.

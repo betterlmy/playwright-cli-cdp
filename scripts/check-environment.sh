@@ -4,9 +4,17 @@ set -uo pipefail
 HOST="${CDP_HOST:-127.0.0.1}"
 PORT="${CDP_PORT:-9222}"
 ENDPOINT="${CDP_ENDPOINT:-http://${HOST}:${PORT}}"
+TIMEOUT_SECONDS="${CDP_TIMEOUT_SECONDS:-15}"
 
 failures=0
 warnings=0
+
+case "$TIMEOUT_SECONDS" in
+  ''|*[!0-9]*) TIMEOUT_SECONDS=15 ;;
+esac
+if (( TIMEOUT_SECONDS < 1 )); then
+  TIMEOUT_SECONDS=15
+fi
 
 ok() {
   printf '[OK] %s\n' "$1"
@@ -61,6 +69,7 @@ find_chrome() {
 
 printf 'playwright-cli-cdp environment check\n'
 printf 'Endpoint: %s\n\n' "$ENDPOINT"
+printf 'Timeout: %ss\n\n' "$TIMEOUT_SECONDS"
 
 case "$(uname -s 2>/dev/null || printf unknown)" in
   Darwin) ok "platform: macOS" ;;
@@ -91,7 +100,7 @@ else
 fi
 
 endpoint_ready=false
-if command -v curl >/dev/null 2>&1 && curl -fsS "${ENDPOINT}/json/version" >/dev/null 2>&1; then
+if command -v curl >/dev/null 2>&1 && curl -fsS --max-time "$TIMEOUT_SECONDS" "${ENDPOINT}/json/version" >/dev/null 2>&1; then
   endpoint_ready=true
   ok "CDP endpoint is reachable: ${ENDPOINT}"
 else

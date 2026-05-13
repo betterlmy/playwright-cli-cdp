@@ -1,9 +1,9 @@
 # CDP Protocol Recipes
 
-Use `playwright-cli run-code` to send raw Chrome DevTools Protocol commands from the active page. Create a CDP session per page:
+Use `playwright-cli run-code` to send raw Chrome DevTools Protocol commands from the active page. The examples use the Bash wrapper; on Windows PowerShell use `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 ...` with the same arguments. Create a CDP session per page:
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   return await cdp.send('Browser.getVersion');
 }"
@@ -12,7 +12,7 @@ playwright-cli -s=cdp run-code "async page => {
 ## Runtime evaluation
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   return await cdp.send('Runtime.evaluate', {
     expression: 'location.href',
@@ -26,7 +26,7 @@ playwright-cli -s=cdp run-code "async page => {
 Enable the domain before issuing domain-specific commands:
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Network.enable');
   return await cdp.send('Network.getCookies', {
@@ -38,14 +38,14 @@ playwright-cli -s=cdp run-code "async page => {
 For normal request inspection after attaching through `--cdp`, use:
 
 ```bash
-playwright-cli -s=cdp requests
-playwright-cli -s=cdp request 5
+bash scripts/playwright-cdp.sh -s=cdp requests
+bash scripts/playwright-cdp.sh -s=cdp request 5
 ```
 
 ## Performance metrics
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
   return await cdp.send('Performance.getMetrics');
@@ -55,7 +55,7 @@ playwright-cli -s=cdp run-code "async page => {
 ## CPU throttling
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   return 'CPU throttling set to 4x';
@@ -65,7 +65,7 @@ playwright-cli -s=cdp run-code "async page => {
 Reset:
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   return 'CPU throttling reset';
@@ -75,7 +75,7 @@ playwright-cli -s=cdp run-code "async page => {
 ## Device metrics
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setDeviceMetricsOverride', {
     width: 390,
@@ -90,7 +90,7 @@ playwright-cli -s=cdp run-code "async page => {
 Clear:
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.clearDeviceMetricsOverride');
   return 'device metrics cleared';
@@ -100,7 +100,7 @@ playwright-cli -s=cdp run-code "async page => {
 ## Security state
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Security.enable');
   return await cdp.send('Security.getCertificate', {
@@ -112,7 +112,7 @@ playwright-cli -s=cdp run-code "async page => {
 ## Coverage
 
 ```bash
-playwright-cli -s=cdp run-code "async page => {
+bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Profiler.enable');
   await cdp.send('Profiler.startPreciseCoverage', {
@@ -131,4 +131,4 @@ playwright-cli -s=cdp run-code "async page => {
 
 ## Attached commands vs raw protocol
 
-This skill is still CDP-only: first attach with `playwright-cli attach --cdp=...`, then use attached `playwright-cli -s=cdp` commands for clicking, typing, snapshots, screenshots, cookies, local storage, and tabs. Use raw CDP when the task needs a protocol domain such as `Browser`, `Network`, `Performance`, `Emulation`, `Security`, `Profiler`, or `Runtime`.
+This skill is still CDP-only: first attach with `playwright-cli attach --cdp=...`, then use attached wrapper commands for clicking, typing, snapshots, screenshots, cookies, local storage, and tabs. Use raw CDP when the task needs a protocol domain such as `Browser`, `Network`, `Performance`, `Emulation`, `Security`, `Profiler`, or `Runtime`.

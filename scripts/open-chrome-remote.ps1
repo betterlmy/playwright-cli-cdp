@@ -4,7 +4,8 @@ param(
   [string]$HostName = "",
   [int]$Port = 0,
   [string]$UserDataDir = "",
-  [string]$ChromeBin = ""
+  [string]$ChromeBin = "",
+  [int]$TimeoutSeconds = 0
 )
 
 if (-not $HostName) {
@@ -27,13 +28,27 @@ if (-not $ChromeBin) {
   $ChromeBin = $env:CHROME_BIN
 }
 
+if (-not $TimeoutSeconds) {
+  $TimeoutSeconds = 15
+  if ($env:CDP_TIMEOUT_SECONDS) {
+    [int]::TryParse($env:CDP_TIMEOUT_SECONDS, [ref]$TimeoutSeconds) | Out-Null
+  }
+}
+
+if ($TimeoutSeconds -lt 1) {
+  $TimeoutSeconds = 15
+}
+
 $Endpoint = "http://${HostName}:$Port"
 
 function Test-CdpEndpoint {
-  param([string]$BaseUrl)
+  param(
+    [string]$BaseUrl,
+    [int]$RequestTimeoutSeconds = 1
+  )
 
   try {
-    Invoke-RestMethod -Uri "$BaseUrl/json/version" -TimeoutSec 1 | Out-Null
+    Invoke-RestMethod -Uri "$BaseUrl/json/version" -TimeoutSec $RequestTimeoutSeconds | Out-Null
     return $true
   } catch {
     return $false
@@ -93,13 +108,14 @@ $Args = @(
 
 Start-Process -FilePath $ChromePath -ArgumentList $Args | Out-Null
 
-for ($i = 0; $i -lt 50; $i++) {
+$Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+while ((Get-Date) -lt $Deadline) {
   if (Test-CdpEndpoint $Endpoint) {
     Write-Output "Chrome remote debugging is available: $Endpoint"
     Write-Output "User data dir: $UserDataDir"
     exit 0
   }
-  Start-Sleep -Milliseconds 100
+  Start-Sleep -Milliseconds 200
 }
 
-throw "Chrome was started but CDP did not become ready at $Endpoint."
+throw "Chrome was started but CDP did not become ready at $Endpoint within ${TimeoutSeconds}s."

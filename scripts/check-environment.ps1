@@ -3,7 +3,8 @@ param(
   [string]$HostName = "",
   [int]$Port = 0,
   [string]$Endpoint = "",
-  [string]$ChromeBin = ""
+  [string]$ChromeBin = "",
+  [int]$TimeoutSeconds = 0
 )
 
 if (-not $HostName) {
@@ -22,6 +23,17 @@ if (-not $Endpoint) {
 
 if (-not $ChromeBin) {
   $ChromeBin = $env:CHROME_BIN
+}
+
+if (-not $TimeoutSeconds) {
+  $TimeoutSeconds = 15
+  if ($env:CDP_TIMEOUT_SECONDS) {
+    [int]::TryParse($env:CDP_TIMEOUT_SECONDS, [ref]$TimeoutSeconds) | Out-Null
+  }
+}
+
+if ($TimeoutSeconds -lt 1) {
+  $TimeoutSeconds = 15
 }
 
 $Failures = 0
@@ -45,10 +57,13 @@ function Write-Fail {
 }
 
 function Test-CdpEndpoint {
-  param([string]$BaseUrl)
+  param(
+    [string]$BaseUrl,
+    [int]$RequestTimeoutSeconds = $TimeoutSeconds
+  )
 
   try {
-    Invoke-RestMethod -Uri "$BaseUrl/json/version" -TimeoutSec 1 | Out-Null
+    Invoke-RestMethod -Uri "$BaseUrl/json/version" -TimeoutSec $RequestTimeoutSeconds | Out-Null
     return $true
   } catch {
     return $false
@@ -82,6 +97,7 @@ function Find-Chrome {
 
 Write-Output "playwright-cli-cdp environment check"
 Write-Output "Endpoint: $Endpoint"
+Write-Output "Timeout: ${TimeoutSeconds}s"
 Write-Output ""
 
 Write-Ok "platform: Windows PowerShell"
