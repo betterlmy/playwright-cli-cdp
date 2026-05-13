@@ -43,6 +43,31 @@ find_chrome() {
   return 1
 }
 
+launch_chrome() {
+  local args=(
+    "--remote-debugging-address=$HOST"
+    "--remote-debugging-port=$PORT"
+    "--user-data-dir=$USER_DATA_DIR"
+    "--no-first-run"
+    "--no-default-browser-check"
+    "$START_URL"
+  )
+
+  if [[ "$(uname -s 2>/dev/null || true)" == "Darwin" && "$chrome_bin" == *.app/Contents/MacOS/* ]]; then
+    local app_path="${chrome_bin%%.app/*}.app"
+    if [[ -d "$app_path" && -x /usr/bin/open ]]; then
+      /usr/bin/open -n -a "$app_path" --args "${args[@]}" >>"$LOG_FILE" 2>&1
+      return 0
+    fi
+  fi
+
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
+  else
+    nohup "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
+  fi
+}
+
 if curl -fsS "${endpoint}/json/version" >/dev/null 2>&1; then
   printf 'Chrome remote debugging is already available: %s\n' "$endpoint"
   exit 0
@@ -60,13 +85,7 @@ fi
 
 mkdir -p "$USER_DATA_DIR"
 
-"$chrome_bin" \
-  --remote-debugging-address="$HOST" \
-  --remote-debugging-port="$PORT" \
-  --user-data-dir="$USER_DATA_DIR" \
-  --no-first-run \
-  --no-default-browser-check \
-  "$START_URL" >"$LOG_FILE" 2>&1 &
+launch_chrome
 
 for _ in {1..50}; do
   if curl -fsS "${endpoint}/json/version" >/dev/null 2>&1; then
