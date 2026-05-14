@@ -161,6 +161,9 @@ Use snapshot refs for normal page interaction.
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp snapshot
 bash scripts/playwright-cdp.sh -s=cdp snapshot --boxes
+bash scripts/playwright-cdp.sh -s=cdp snapshot --depth=4
+bash scripts/playwright-cdp.sh -s=cdp snapshot e34
+bash scripts/playwright-cdp.sh -s=cdp snapshot --filename=after-click.yaml
 bash scripts/playwright-cdp.sh -s=cdp goto https://playwright.dev
 bash scripts/playwright-cdp.sh -s=cdp click e3
 bash scripts/playwright-cdp.sh -s=cdp dblclick e7
@@ -170,6 +173,10 @@ bash scripts/playwright-cdp.sh -s=cdp press Enter
 bash scripts/playwright-cdp.sh -s=cdp hover e4
 bash scripts/playwright-cdp.sh -s=cdp select e9 "option-value"
 bash scripts/playwright-cdp.sh -s=cdp upload ./document.pdf
+bash scripts/playwright-cdp.sh -s=cdp drop e4 --path=./image.png
+bash scripts/playwright-cdp.sh -s=cdp drop e4 --data="text/plain=hello world"
+bash scripts/playwright-cdp.sh -s=cdp check e12
+bash scripts/playwright-cdp.sh -s=cdp uncheck e12
 bash scripts/playwright-cdp.sh -s=cdp screenshot --filename=page.png
 ```
 
@@ -192,6 +199,7 @@ bash scripts/playwright-cdp.sh -s=cdp go-back
 bash scripts/playwright-cdp.sh -s=cdp go-forward
 bash scripts/playwright-cdp.sh -s=cdp reload
 bash scripts/playwright-cdp.sh -s=cdp resize 1440 1000
+bash scripts/playwright-cdp.sh -s=cdp pdf --filename=page.pdf
 ```
 
 ## Console, network, and storage
@@ -199,8 +207,7 @@ bash scripts/playwright-cdp.sh -s=cdp resize 1440 1000
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp console
 bash scripts/playwright-cdp.sh -s=cdp console error
-bash scripts/playwright-cdp.sh -s=cdp requests
-bash scripts/playwright-cdp.sh -s=cdp request 5
+bash scripts/playwright-cdp.sh -s=cdp network
 
 bash scripts/playwright-cdp.sh -s=cdp cookie-list
 bash scripts/playwright-cdp.sh -s=cdp cookie-get session_id
@@ -219,6 +226,69 @@ Use `--raw` for machine-readable pipelines:
 bash scripts/playwright-cdp.sh -s=cdp --raw eval "document.title"
 bash scripts/playwright-cdp.sh -s=cdp --raw snapshot > page.yml
 bash scripts/playwright-cdp.sh -s=cdp --raw cookie-get session_id
+TOKEN=$(bash scripts/playwright-cdp.sh -s=cdp --raw cookie-get session_id)
+```
+
+Use `--json` for structured JSON output:
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp list --json
+```
+
+## Keyboard and mouse
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp keydown Shift
+bash scripts/playwright-cdp.sh -s=cdp keyup Shift
+bash scripts/playwright-cdp.sh -s=cdp mousemove 150 300
+bash scripts/playwright-cdp.sh -s=cdp mousedown
+bash scripts/playwright-cdp.sh -s=cdp mousedown right
+bash scripts/playwright-cdp.sh -s=cdp mouseup
+bash scripts/playwright-cdp.sh -s=cdp mousewheel 0 100
+```
+
+## Dialog handling
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp dialog-accept
+bash scripts/playwright-cdp.sh -s=cdp dialog-accept "confirmation text"
+bash scripts/playwright-cdp.sh -s=cdp dialog-dismiss
+```
+
+## Request routing
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp route "**/*.jpg" --status=404
+bash scripts/playwright-cdp.sh -s=cdp route "**/api/users" --body='[{"id":1}]' --content-type=application/json
+bash scripts/playwright-cdp.sh -s=cdp route-list
+bash scripts/playwright-cdp.sh -s=cdp unroute "**/*.jpg"
+bash scripts/playwright-cdp.sh -s=cdp unroute
+```
+
+See [references/request-mocking.md](references/request-mocking.md) for advanced mocking with `run-code`.
+
+## Tracing and video
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp tracing-start
+bash scripts/playwright-cdp.sh -s=cdp tracing-stop
+
+bash scripts/playwright-cdp.sh -s=cdp video-start recording.webm
+bash scripts/playwright-cdp.sh -s=cdp video-chapter "Chapter Title" --description="Details" --duration=2000
+bash scripts/playwright-cdp.sh -s=cdp video-stop
+```
+
+See [references/tracing.md](references/tracing.md) and [references/video-recording.md](references/video-recording.md) for detail.
+
+## Debug tools
+
+```bash
+bash scripts/playwright-cdp.sh -s=cdp highlight e5
+bash scripts/playwright-cdp.sh -s=cdp highlight e5 --style="outline: 3px dashed red"
+bash scripts/playwright-cdp.sh -s=cdp highlight e5 --hide
+bash scripts/playwright-cdp.sh -s=cdp highlight --hide
+bash scripts/playwright-cdp.sh -s=cdp generate-locator e5 --raw
+bash scripts/playwright-cdp.sh -s=cdp show --annotate
 ```
 
 ## Raw CDP commands
@@ -279,3 +349,10 @@ npm install -g @playwright/cli@latest
 
 - CDP startup and troubleshooting: [references/cdp-startup.md](references/cdp-startup.md)
 - CDP protocol recipes: [references/cdp-recipes.md](references/cdp-recipes.md)
+- Element attribute inspection: [references/element-attributes.md](references/element-attributes.md)
+- Request mocking: [references/request-mocking.md](references/request-mocking.md)
+- Custom Playwright code: [references/running-code.md](references/running-code.md)
+- Storage management: [references/storage-state.md](references/storage-state.md)
+- Test code generation: [references/test-generation.md](references/test-generation.md)
+- Tracing: [references/tracing.md](references/tracing.md)
+- Video recording: [references/video-recording.md](references/video-recording.md)

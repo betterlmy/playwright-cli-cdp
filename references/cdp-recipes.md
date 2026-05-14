@@ -38,8 +38,7 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 For normal request inspection after attaching through `--cdp`, use:
 
 ```bash
-bash scripts/playwright-cdp.sh -s=cdp requests
-bash scripts/playwright-cdp.sh -s=cdp request 5
+bash scripts/playwright-cdp.sh -s=cdp network
 ```
 
 ## Performance metrics
